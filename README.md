@@ -1,32 +1,85 @@
-# React + TypeScript + Vite
+# Shree Balaji Hospital
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern, responsive hospital website built with **React**, **TypeScript**, **Vite**, **Tailwind CSS**, and **shadcn/ui**.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* Responsive design
+* Hospital information pages
+* Department listings
+* Doctor profiles
+* Appointment booking page
+* Emergency contact section
+* Gallery
+* Contact page
+* SEO-friendly structure
+* Modern UI using shadcn/ui components
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* shadcn/ui
+* React Query
+* Wouter
+* Framer Motion
+* Radix UI
 
-## Expanding the Oxlint configuration
+## Getting Started
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### Clone the repository
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+git clone https://github.com/Anshuman-Tiwari-2002/shree-balaji-hospital-standalone.git
+cd shree-balaji-hospital-standalone
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Install dependencies
+
+```bash
+pnpm install
+```
+
+### Start the development server
+
+```bash
+pnpm dev
+```
+
+The application will be available at:
+
+```
+http://localhost:5173
+```
+
+### Build for production
+
+```bash
+pnpm build
+```
+
+### Preview the production build
+
+```bash
+pnpm preview
+```
+
+## Project Structure
+
+```
+src/
+├── components/
+├── data/
+├── hooks/
+├── lib/
+├── pages/
+└── main.tsx
+
+public/
+```
+
+## License
+
+This project is for educational and development purposes.
