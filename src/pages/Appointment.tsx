@@ -1,0 +1,297 @@
+import { useState } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { departments, doctors, hospitalInfo } from "@/data/hospitalData";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
+import { PhoneCall, CalendarCheck } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+const appointmentSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  phone: z.string().min(10, "Valid phone number is required"),
+  email: z.string().email("Valid email is required").optional().or(z.literal('')),
+  department: z.string().min(1, "Please select a department"),
+  doctor: z.string().min(1, "Please select a doctor"),
+  date: z.string().min(1, "Please select a date"),
+  time: z.string().min(1, "Please select preferred time"),
+  message: z.string().optional()
+});
+
+export default function Appointment() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const form = useForm<z.infer<typeof appointmentSchema>>({
+    resolver: zodResolver(appointmentSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      email: "",
+      department: "",
+      doctor: "",
+      date: "",
+      time: "",
+      message: ""
+    }
+  });
+
+  const selectedDepartment = form.watch("department");
+  // Simple filter for doctors based on department name match (in real app, use better mapping)
+  const filteredDoctors = selectedDepartment 
+    ? doctors.filter(d => d.specialization.includes(departments.find(dept => dept.id === selectedDepartment)?.name.split(' ')[0] || '')) 
+    : doctors;
+
+  // Fallback to show all doctors if none match strictly
+  const availableDoctors = filteredDoctors.length > 0 ? filteredDoctors : doctors;
+
+  const onSubmit = (_data: z.infer<typeof appointmentSchema>) => {
+    setIsSubmitting(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      toast({
+        title: "Appointment Requested Successfully",
+        description: "Our team will contact you shortly to confirm your appointment.",
+      });
+      form.reset();
+      
+      // Reset success state after 5 seconds
+      setTimeout(() => setIsSuccess(false), 5000);
+    }, 1500);
+  };
+
+  return (
+    <div className="w-full">
+      <PageHeader 
+        title="Book an Appointment" 
+        subtitle="Schedule your visit with our expert doctors."
+        breadcrumbs={[{ label: "Appointment" }]} 
+      />
+
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-2">
+              <div className="bg-card rounded-2xl shadow-sm border p-8">
+                {isSuccess ? (
+                  <div className="text-center py-16">
+                    <div className="w-20 h-20 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CalendarCheck className="w-10 h-10" />
+                    </div>
+                    <h3 className="text-2xl font-bold font-serif mb-4">Request Received!</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto mb-8">
+                      Thank you for choosing Shree Balaji Life Line Hospital. Our front desk will call you shortly on your registered number to confirm the appointment slot.
+                    </p>
+                    <Button onClick={() => setIsSuccess(false)}>Book Another Appointment</Button>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-2xl font-bold font-serif mb-6">Appointment Details</h2>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Patient Name *</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="John Doe" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Phone Number *</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="10-digit mobile number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email Address (Optional)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="john@example.com" type="email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="department"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Select Department *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choose Department" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {departments.map((dept) => (
+                                      <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="doctor"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Select Doctor *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choose Doctor" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {availableDoctors.map((doc) => (
+                                      <SelectItem key={doc.id} value={doc.id}>{doc.name} - {doc.specialization}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Preferred Date *</FormLabel>
+                                <FormControl>
+                                  <Input type="date" min={new Date().toISOString().split('T')[0]} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="time"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Preferred Time *</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choose Time" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="morning">Morning (8:00 AM - 12:00 PM)</SelectItem>
+                                    <SelectItem value="afternoon">Afternoon (12:00 PM - 4:00 PM)</SelectItem>
+                                    <SelectItem value="evening">Evening (4:00 PM - 8:00 PM)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="message"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Symptoms / Message (Optional)</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Briefly describe your symptoms or reason for visit" className="h-24" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Button type="submit" size="lg" className="w-full text-base" disabled={isSubmitting}>
+                          {isSubmitting ? "Submitting..." : "Request Appointment"}
+                        </Button>
+                      </form>
+                    </Form>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-destructive text-destructive-foreground p-6 rounded-2xl shadow-sm">
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <PhoneCall className="w-5 h-5" />
+                  Medical Emergency?
+                </h3>
+                <p className="opacity-90 mb-6">
+                  For immediate medical assistance and trauma care, please call our emergency numbers directly. We are open 24/7.
+                </p>
+                <div className="space-y-3">
+                  <a href={`tel:${hospitalInfo.contact.phone.replace(/-/g, "")}`} className="block bg-white text-destructive font-bold text-center py-3 rounded-lg hover:bg-zinc-100 transition-colors">
+                    {hospitalInfo.contact.phone}
+                  </a>
+                  <a href={`tel:${hospitalInfo.contact.mobile}`} className="block bg-transparent border border-white text-white font-bold text-center py-3 rounded-lg hover:bg-white/10 transition-colors">
+                    {hospitalInfo.contact.mobile}
+                  </a>
+                </div>
+              </div>
+
+              <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10">
+                <h3 className="text-lg font-bold font-serif mb-4 text-primary">Working Hours</h3>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground">Emergency</span>
+                    <span className="font-semibold">24×7</span>
+                  </li>
+                  <li className="flex justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground">OPD Timings</span>
+                    <span className="font-semibold">8:00 AM - 10:00 PM</span>
+                  </li>
+                  <li className="flex justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground">Pharmacy</span>
+                    <span className="font-semibold">24×7</span>
+                  </li>
+                  <li className="flex justify-between pb-2">
+                    <span className="text-muted-foreground">Pathology Lab</span>
+                    <span className="font-semibold">24×7</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
