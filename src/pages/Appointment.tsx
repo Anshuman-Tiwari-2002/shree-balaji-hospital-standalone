@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { supabase } from "@/lib/supabase";
 
 const appointmentSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -50,22 +51,77 @@ export default function Appointment() {
   // Fallback to show all doctors if none match strictly
   const availableDoctors = filteredDoctors.length > 0 ? filteredDoctors : doctors;
 
-  const onSubmit = (_data: z.infer<typeof appointmentSchema>) => {
-    setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      toast({
-        title: "Appointment Requested Successfully",
-        description: "Our team will contact you shortly to confirm your appointment.",
-      });
-      form.reset();
+  // const onSubmit = (_data: z.infer<typeof appointmentSchema>) => {
+  //   setIsSubmitting(true);
+  //   // Simulate API call
+  //   setTimeout(() => {
+  //     setIsSubmitting(false);
+  //     setIsSuccess(true);
+  //     toast({
+  //       title: "Appointment Requested Successfully",
+  //       description: "Our team will contact you shortly to confirm your appointment.",
+  //     });
+  //     form.reset();
       
-      // Reset success state after 5 seconds
-      setTimeout(() => setIsSuccess(false), 5000);
-    }, 1500);
-  };
+  //     // Reset success state after 5 seconds
+  //     setTimeout(() => setIsSuccess(false), 5000);
+  //   }, 1500);
+  // };
+
+  const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
+  setIsSubmitting(true);
+
+  const departmentName =
+  departments.find((dept) => dept.id === data.department)?.name ??
+  data.department;
+
+const doctorName =
+  doctors.find((doc) => doc.id === data.doctor)?.name ??
+  data.doctor;
+
+const timeLabel =
+  {
+    morning: "Morning (8:00 AM - 12:00 PM)",
+    afternoon: "Afternoon (12:00 PM - 4:00 PM)",
+    evening: "Evening (4:00 PM - 8:00 PM)",
+  }[data.time] ?? data.time;
+
+  const { error } = await supabase.from("appointments").insert([
+    {
+      name: data.name,
+      phone: data.phone,
+      email: data.email || null,
+      department: departmentName,
+      doctor: doctorName,
+      appointment_date: data.date,
+      appointment_time: timeLabel,
+      message: data.message || null,
+    },
+  ]);
+
+  setIsSubmitting(false);
+
+  if (error) {
+    toast({
+      title: "Something went wrong",
+      description: error.message,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsSuccess(true);
+
+  toast({
+    title: "Appointment Requested Successfully",
+    description:
+      "Our team will contact you shortly to confirm your appointment.",
+  });
+
+  form.reset();
+
+  setTimeout(() => setIsSuccess(false), 5000);
+};
 
   return (
     <div className="w-full">
