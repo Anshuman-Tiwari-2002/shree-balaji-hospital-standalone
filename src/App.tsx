@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,13 @@ import { FloatingButtons } from "@/components/layout/FloatingButtons";
 // Critical path — loaded eagerly
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
+
+import AdminLogin from "@/admin/AdminLogin";
+import Dashboard from "@/admin/Dashboard";
+import Appointments from "./admin/pages/Appointments";
+import AdminDepartments from "./admin/pages/Departments";
+import DoctorsAdmin from "./admin/pages/Doctors";
+import ProtectedRoute from "@/admin/ProtectedRoute";
 
 // Non-critical pages — lazy-loaded on demand
 const About = lazy(() => import("@/pages/About"));
@@ -31,13 +39,55 @@ const queryClient = new QueryClient();
 
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]" aria-label="Loading page">
+    <div
+      className="flex items-center justify-center min-h-[60vh]"
+      aria-label="Loading page"
+    >
       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
 
 function Router() {
+  const [location] = useLocation();
+  const isAdmin = location.startsWith("/admin");
+
+  if (isAdmin) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Switch>
+          <Route path="/admin" component={AdminLogin} />
+
+          <Route path="/admin/dashboard">
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/admin/appointments">
+            <ProtectedRoute>
+              <Appointments />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/admin/departments">
+            <ProtectedRoute>
+              <AdminDepartments />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/admin/doctors">
+            <ProtectedRoute>
+              <DoctorsAdmin />
+            </ProtectedRoute>
+          </Route>
+
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
+    );
+  }
+
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <Navbar />
